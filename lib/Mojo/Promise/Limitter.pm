@@ -1,5 +1,5 @@
 package Mojo::Promise::Limitter;
-use Mojo::Base -base;
+use Mojo::Base 'Mojo::EventEmitter';
 use Mojo::Promise;
 
 our $VERSION = '0.001';
@@ -13,55 +13,49 @@ sub new {
     $class->SUPER::new(concurrency => $concurrency);
 }
 
-sub remove {
-    my $self = shift;
-    $self->{outstanding}--;
+sub limit {
+    my ($self, $sub, $name) = @_;
+    $name //= 'anon';
     if ($self->outstanding < $self->concurrency) {
-        $self->dequeue;
+        return $self->_run($sub, $name);
+    } else {
+        return $self->_queue($sub, $name);
     }
 }
 
-sub dequeue {
-    my $self = shift;
-    my $job = shift @{$self->jobs};
-    if ($job) {
-        $self->run($job->{sub})->then($job->{resolve}, $job->{reject});
-    }
+sub _run {
+    my ($self, $sub, $name) = @_;
+    $self->{outstanding}++;
+
+    $self->emit(run => $name);
+    $sub->()->then(
+        sub { $self->_remove; @_ },
+        sub { $self->_remove; Mojo::Promise->reject(@_) },
+    );
 }
 
-sub queue {
-    my ($self, $sub) = @_;
+sub _queue {
+    my ($self, $sub, $name) = @_;
+    $self->emit(queue => $name);
     Mojo::Promise->new(sub {
         my ($resolve, $reject) = @_;
-        push @{$self->jobs}, { sub => $sub, resolve => $resolve, reject => $reject };
+        push @{$self->jobs}, { sub => $sub, name => $name, resolve => $resolve, reject => $reject };
     });
 }
 
-sub run {
-    my ($self, $sub) = @_;
-    $self->{outstanding}++;
-
-    $sub->()->then(
-        sub {
-            my @result = @_;
-            $self->remove;
-            return @result;
-        },
-        sub {
-            my @error = @_;
-            $self->remove;
-            Mojo::Promise->reject(@error);
-        },
-    );
-
+sub _dequeue {
+    my $self = shift;
+    if (my $job = shift @{$self->jobs}) {
+        $self->emit(dequeue => $job->{name});
+        $self->_run($job->{sub}, $job->{name})->then($job->{resolve}, $job->{reject});
+    }
 }
 
-sub limit {
-    my ($self, $sub) = @_;
-    if ($self->outstanding >= $self->concurrency) {
-        return $self->queue($sub);
-    } else {
-        return $self->run($sub);
+sub _remove {
+    my $self = shift;
+    $self->{outstanding}--;
+    if ($self->outstanding < $self->concurrency) {
+        $self->_dequeue;
     }
 }
 
