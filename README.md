@@ -55,23 +55,78 @@ will outputs:
 Mojo::Promise::Limitter allows you to limit outstanding calls to `Mojo::Promise`s.
 This is a Perl port of [https://github.com/featurist/promise-limit](https://github.com/featurist/promise-limit).
 
+# MOTIVATION
+
+I sometimes want to limit outstanding calls to reduce load on external services,
+or to reduce some resource (cpu, memory, etc) usage.
+For example, without some mechanism to limit outstanding calls,
+the following code open 5 connections to metacpan.
+
+    my $http = Mojo::UserAgent->new;
+    Mojo::Promise->all_settled(
+      $http->get_p("https://metacpan.org/release/App-cpm"),
+      $http->get_p("https://metacpan.org/release/Minilla"),
+      $http->get_p("https://metacpan.org/release/Mouse"),
+      $http->get_p("https://metacpan.org/release/Perl6-Build"),
+      $http->get_p("https://metacpan.org/release/Test-CI"),
+    )->wait;
+
+With Mojo::Promise::Limitter, you can easily limit concurrent connections.
+See [eg/http.pl](https://github.com/skaji/Mojo-Promise-Limitter/tree/master/eg/http.pl)
+for real world example.
+
+# EVENTS
+
+Mojo::Promise::Limitter inherits all events from [Mojo::EventEmitter](https://metacpan.org/pod/Mojo%3A%3AEventEmitter) and can emit the
+following new ones.
+
+## run
+
+    $limitter->on(run => sub {
+      my ($limitter, $name) = @_;
+      ...;
+    });
+
+## remove
+
+    $limitter->on(remove => sub {
+      my ($limitter, $name) = @_;
+      ...;
+    });
+
+## queue
+
+    $limitter->on(queue => sub {
+      my ($limitter, $name) = @_;
+      ...;
+    });
+
+## dequeue
+
+    $limitter->on(dequeue => sub {
+      my ($limitter, $name) = @_;
+      ...;
+    });
+
 # METHODS
 
-[Mojo::Promise::Limitter](https://metacpan.org/pod/Mojo%3A%3APromise%3A%3ALimitter) inherits all methods from [Mojo::Base](https://metacpan.org/pod/Mojo%3A%3ABase) and implements
+Mojo::Promise::Limitter inherits all methods from [Mojo::EventEmitter](https://metacpan.org/pod/Mojo%3A%3AEventEmitter) and implements
 the following new ones.
 
 ## new
 
     my $limitter = Mojo::Promise::Limitter->new($concurrency);
 
-Constructs `Mojo::Promise::Limitter` object.
+Constructs Mojo::Promise::Limitter object.
 
 ## limit
 
     my $promise = $limitter->limit($sub);
+    my $promise = $limitter->limit($sub, $name);
 
 Limits calls to `$sub` based on `concurrency`,
-where `$sub` is a subroutine reference that must return a promise.
+where `$sub` is a subroutine reference that must return a promise, and
+`$name` is an optional argument which will be used in events.
 `$limitter->limit($sub)` returns a promise that resolves or rejects
 the same value or error as `$sub`.
 All subroutine references are executed in the same order in which

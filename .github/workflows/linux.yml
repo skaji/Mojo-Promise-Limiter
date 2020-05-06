@@ -17,6 +17,7 @@ jobs:
       matrix:
         perl-version:
           - 'latest'
+          - 'threaded'
 
     container:
       image: perl:${{ matrix.perl-version }}
