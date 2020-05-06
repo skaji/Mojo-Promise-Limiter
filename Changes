@@ -2,5 +2,8 @@ Revision history for Mojo-Promise-Limiter
 
 {{$NEXT}}
 
+0.100  2020-05-06 20:05:26 JST
+    - Limitter -> Limiter :)
+
 0.001  2020-05-06 19:35:55 JST
     - Initial release

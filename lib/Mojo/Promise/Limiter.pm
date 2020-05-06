@@ -2,7 +2,7 @@ package Mojo::Promise::Limiter;
 use Mojo::Base 'Mojo::EventEmitter';
 use Mojo::Promise;
 
-our $VERSION = '0.001';
+our $VERSION = '0.100';
 
 has outstanding => 0;
 has concurrency => 0;
