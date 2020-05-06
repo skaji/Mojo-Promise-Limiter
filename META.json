@@ -12,7 +12,7 @@
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
       "version" : 2
    },
-   "name" : "Mojo-Promise-Limitter",
+   "name" : "Mojo-Promise-Limiter",
    "no_index" : {
       "directory" : [
          "eg",
@@ -43,21 +43,21 @@
       }
    },
    "provides" : {
-      "Mojo::Promise::Limitter" : {
-         "file" : "lib/Mojo/Promise/Limitter.pm",
+      "Mojo::Promise::Limiter" : {
+         "file" : "lib/Mojo/Promise/Limiter.pm",
          "version" : "0.001"
       }
    },
    "release_status" : "stable",
    "resources" : {
       "bugtracker" : {
-         "web" : "https://github.com/skaji/Mojo-Promise-Limitter/issues"
+         "web" : "https://github.com/skaji/Mojo-Promise-Limiter/issues"
       },
-      "homepage" : "https://github.com/skaji/Mojo-Promise-Limitter",
+      "homepage" : "https://github.com/skaji/Mojo-Promise-Limiter",
       "repository" : {
          "type" : "git",
-         "url" : "https://github.com/skaji/Mojo-Promise-Limitter.git",
-         "web" : "https://github.com/skaji/Mojo-Promise-Limitter"
+         "url" : "https://github.com/skaji/Mojo-Promise-Limiter.git",
+         "web" : "https://github.com/skaji/Mojo-Promise-Limiter"
       }
    },
    "version" : "0.001",

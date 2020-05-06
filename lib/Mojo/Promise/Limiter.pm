@@ -1,4 +1,4 @@
-package Mojo::Promise::Limitter;
+package Mojo::Promise::Limiter;
 use Mojo::Base 'Mojo::EventEmitter';
 use Mojo::Promise;
 
@@ -66,20 +66,20 @@ __END__
 
 =head1 NAME
 
-Mojo::Promise::Limitter - limit outstanding calls to Mojo::Promise
+Mojo::Promise::Limiter - limit outstanding calls to Mojo::Promise
 
 =head1 SYNOPSIS
 
-  use Mojo::Promise::Limitter;
+  use Mojo::Promise::Limiter;
   use Mojo::Promise;
   use Mojo::IOLoop;
 
-  my $limitter = Mojo::Promise::Limitter->new(2);
+  my $limiter = Mojo::Promise::Limiter->new(2);
 
   my @job = 'a' .. 'e';
 
   Mojo::Promise->all(
-    map { my $name = $_; $limitter->limit(sub { job($name) }) } @job,
+    map { my $name = $_; $limiter->limit(sub { job($name) }) } @job,
   )->then(sub {
     my @result = @_;
     warn "\n";
@@ -116,7 +116,7 @@ will outputs:
 
 =head1 DESCRIPTION
 
-Mojo::Promise::Limitter allows you to limit outstanding calls to C<Mojo::Promise>s.
+Mojo::Promise::Limiter allows you to limit outstanding calls to C<Mojo::Promise>s.
 This is a Perl port of L<https://github.com/featurist/promise-limit>.
 
 =head1 MOTIVATION
@@ -135,66 +135,66 @@ the following code open 5 connections to metacpan.
     $http->get_p("https://metacpan.org/release/Test-CI"),
   )->wait;
 
-With Mojo::Promise::Limitter, you can easily limit concurrent connections.
-See L<eg/http.pl|https://github.com/skaji/Mojo-Promise-Limitter/tree/master/eg/http.pl>
+With Mojo::Promise::Limiter, you can easily limit concurrent connections.
+See L<eg/http.pl|https://github.com/skaji/Mojo-Promise-Limiter/tree/master/eg/http.pl>
 for real world example.
 
 =head1 EVENTS
 
-Mojo::Promise::Limitter inherits all events from L<Mojo::EventEmitter> and can emit the
+Mojo::Promise::Limiter inherits all events from L<Mojo::EventEmitter> and can emit the
 following new ones.
 
 =head2 run
 
-  $limitter->on(run => sub {
-    my ($limitter, $name) = @_;
+  $limiter->on(run => sub {
+    my ($limiter, $name) = @_;
     ...;
   });
 
 =head2 remove
 
-  $limitter->on(remove => sub {
-    my ($limitter, $name) = @_;
+  $limiter->on(remove => sub {
+    my ($limiter, $name) = @_;
     ...;
   });
 
 =head2 queue
 
-  $limitter->on(queue => sub {
-    my ($limitter, $name) = @_;
+  $limiter->on(queue => sub {
+    my ($limiter, $name) = @_;
     ...;
   });
 
 =head2 dequeue
 
-  $limitter->on(dequeue => sub {
-    my ($limitter, $name) = @_;
+  $limiter->on(dequeue => sub {
+    my ($limiter, $name) = @_;
     ...;
   });
 
 =head1 METHODS
 
-Mojo::Promise::Limitter inherits all methods from L<Mojo::EventEmitter> and implements
+Mojo::Promise::Limiter inherits all methods from L<Mojo::EventEmitter> and implements
 the following new ones.
 
 =head2 new
 
-  my $limitter = Mojo::Promise::Limitter->new($concurrency);
+  my $limiter = Mojo::Promise::Limiter->new($concurrency);
 
-Constructs Mojo::Promise::Limitter object.
+Constructs Mojo::Promise::Limiter object.
 
 =head2 limit
 
-  my $promise = $limitter->limit($sub);
-  my $promise = $limitter->limit($sub, $name);
+  my $promise = $limiter->limit($sub);
+  my $promise = $limiter->limit($sub, $name);
 
 Limits calls to C<$sub> based on C<concurrency>,
 where C<$sub> is a subroutine reference that must return a promise, and
 C<$name> is an optional argument which will be used in events.
-C<< $limitter->limit($sub) >> returns a promise that resolves or rejects
+C<< $limiter->limit($sub) >> returns a promise that resolves or rejects
 the same value or error as C<$sub>.
 All subroutine references are executed in the same order in which
-they were passed to C<< $limitter->limit >> method.
+they were passed to C<< $limiter->limit >> method.
 
 =head1 SEE ALSO
 

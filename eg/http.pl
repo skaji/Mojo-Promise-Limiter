@@ -1,39 +1,39 @@
 #!/usr/bin/env perl
 
-package Mojo::Promise::Limitter::UserAgent {
+package Mojo::Promise::Limiter::UserAgent {
     use Mojo::Base 'Mojo::EventEmitter', -signatures;
 
-    use Mojo::Promise::Limitter;
+    use Mojo::Promise::Limiter;
     use Mojo::URL;
     use Mojo::UserAgent;
     use Scalar::Util 'blessed';
 
     has concurrency => 0;
-    has limitters => sub { +{} };
+    has limiters => sub { +{} };
     has http => sub { Mojo::UserAgent->new(max_connections => 0) };
 
     sub new ($class, $concurrency) {
         $class->SUPER::new(concurrency => $concurrency);
     }
 
-    sub _limitter ($self, $url) {
+    sub _limiter ($self, $url) {
         my $key;
         if (blessed $url && $url->isa('Mojo::URL')) {
             $key = $url->host_port;
         } else {
             $key = Mojo::URL->new($url)->host_port;
         }
-        $self->{limitters}{$key} ||= do {
-            my $limitter = Mojo::Promise::Limitter->new($self->concurrency);
+        $self->{limiters}{$key} ||= do {
+            my $limiter = Mojo::Promise::Limiter->new($self->concurrency);
             for my $event (qw(error run remove queue dequeue)) {
-                $limitter->on($event => sub ($, $name) { $self->emit($event => $name) });
+                $limiter->on($event => sub ($, $name) { $self->emit($event => $name) });
             }
-            $limitter;
+            $limiter;
         };
     }
 
     sub get_p ($self, $url, @argv) {
-        $self->_limitter($url)->limit(sub () { $self->http->get_p($url, @argv) }, $url);
+        $self->_limiter($url)->limit(sub () { $self->http->get_p($url, @argv) }, $url);
     }
 }
 
@@ -41,7 +41,7 @@ use Mojo::Base -signatures;
 use Mojo::Promise;
 
 # limit concurrent http connection; max 3 connections per host
-my $http = Mojo::Promise::Limitter::UserAgent->new(3);
+my $http = Mojo::Promise::Limiter::UserAgent->new(3);
 $http->on(run    => sub ($, $url) { warn "---> Doing $url\n"});
 $http->on(remove => sub ($, $url) { warn "---> Done  $url\n"});
 
